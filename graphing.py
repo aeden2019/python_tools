@@ -1,4 +1,6 @@
 """
+Graphing functions to rotate FIRE simulations and graph profiles. Does not include subhalo object removal. 
+
 Requirements:
 -------------
 numpy
@@ -6,6 +8,9 @@ pynbody_routines
 pynbody
 astropy
 matplotlib
+
+author: Andrew Eden
+github: aeden2019
 
 """
 
@@ -15,16 +20,62 @@ import pynbody
 from astropy import units as u
 import matplotlib
 import matplotlib.pyplot as plt
+import nba
+import plotting as pl
+
+
+def mollweide(pos, vel, rmin, rmax, bmin, bmax, sim, snap, matter):
+    """
+    Graph a mollweide plot
+        
+    Parameters:
+    ----------
+    pos: pynbody SimArray
+    vel: pynbody SimArray
+    rmin: float
+    rmin: float
+    bmin: int 
+    bmax: int
+    sim: string
+    snap: string
+    matter: string (star or dark)
+
+    Returns:
+    --------
+
+    
+    """
+    
+    # Cut stellar distribution based on radius limits
+    dist = np.sqrt(np.sum(pos**2, axis=1))
+    dist_cut1 = np.where((dist > rmin) & (dist< rmax)) 
+        
+    # Create kinematic profile
+    kinematics1 = nba.kinematics.Kinematics(pos[dist_cut1],  vel[dist_cut1])
+    
+    # Convert pos and vel into galactic coordinate from kinematics 
+    pos_galactic = kinematics1.pos_cartesian_to_galactic()
+    vel_galactic = kinematics1.vel_cartesian_to_galactic()
+    
+    # Declare figure title
+    fig_title = "{} satellite vr {}; {}-{} kpc; {} snapshot".format(sim, matter, rmin, rmax, snap)
+    
+    # Call mollweide projection function 
+    pl.mollweide_projection(pos_galactic[0]*180/np.pi, pos_galactic[1]*180/np.pi, 0, 0, 
+                            title=fig_title, bmin=bmin, bmax=bmax, nside=40, smooth=5, overdensity=True)
+    
+    return
 
 
 
-def rotate_fire(part):
+def rotate_fire(part, matter):
     """
     Reposition and rotate the simulation to see the halo face on
         
     Parameters:
     ----------
     part: gizmo particle dictionary 
+    matter: string
 
     Returns:
     --------
@@ -50,14 +101,20 @@ def rotate_fire(part):
     f = 1* (u.km/u.s).to(u.kpc/u.Gyr)
     
     # Get positions and velocities from pynbody object
-    pos = hfaceon.star['pos']
-    vel = hfaceon.star['vel']*f
+    if matter == 'star':
+        pos = hfaceon.star['pos']
+        vel = hfaceon.star['vel']*f
+    elif matter == 'dark':
+        pos = hfaceon.dark['pos']
+        vel = hfaceon.dark['vel']*f
+    else:
+        print('Selected matter type is not defined, please use star or dark instead')
     
     return hfaceon, pos, vel
 
 
 
-def graph_profiles(hfaceon, rmin, rmax):
+def graph_profiles(hfaceon, rmin, rmax, sim, snap):
     """
     Graph tangential velocity dispersion, radial velocity dispersion, and density profiles
         
@@ -66,6 +123,8 @@ def graph_profiles(hfaceon, rmin, rmax):
     hfaceon: pynbody SimSnap
     rmin: float
     rmax: float
+    sim: string
+    snap: string
 
     Returns:
     --------
@@ -78,6 +137,9 @@ def graph_profiles(hfaceon, rmin, rmax):
     
     # Declare figure with three subplots
     fig, axs = plt.subplots(2,3,figsize=(21,12))
+    
+    # Add title 
+    plt.title('Velocity and density profiles for {} snapshot {}'.format(sim, snap))
     
     # Stellar plots
     axs[0,0].plot(pStar['rbins'].in_units('kpc'),pStar['vr_disp'].in_units('km s^-1'))
