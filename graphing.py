@@ -22,6 +22,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import nba
 import plotting as pl
+import json
+from matplotlib.cm import get_cmap
 
 
 def mollweide(pos, vel, rmin, rmax, bmin, bmax, sim, snap, matter):
@@ -156,7 +158,7 @@ def graph_profiles(hfaceon, rmin, rmax, sim, snap):
     axs[0,2].semilogy()
     axs[0,2].set_title('Stellar Density')
     axs[0,2].set_xlabel('R [kpc]')
-    axs[0,2].set_ylabel(r'$\Sigma_{\star}$ [M$_{\odot}$ kpc$^{-2}$]')
+    axs[0,2].set_ylabel(r'$\Sigma_{\star}$ [M$_{\odot}$ kpc$^{-3}$]')
     
     # Dark matter plots   
     axs[1,0].plot(pDark['rbins'].in_units('kpc'),pDark['vr_disp'].in_units('km s^-1'))
@@ -173,8 +175,67 @@ def graph_profiles(hfaceon, rmin, rmax, sim, snap):
     axs[1,2].semilogy()
     axs[1,2].set_title('Dark Matter Density')
     axs[1,2].set_xlabel('R [kpc]')
-    axs[1,2].set_ylabel(r'$\Sigma_{\star}$ [M$_{\odot}$ kpc$^{-2}$]')
+    axs[1,2].set_ylabel(r'$\Sigma_{\star}$ [M$_{\odot}$ kpc$^{-3}$]')
+    
+    #plt.close()
     
     return
 
+
+
+def store_profile_data(hfaceon, rmin, rmax, sim, snap, file_path):
+    
+    """
+    Extracts data from pynbody profiles, and stores them for graphing later
+        
+    Parameters:
+    ----------
+    hfaceon: pynbody SimSnap
+    rmin: float
+    rmax: float
+    sim: string
+    snap: string
+    file_path
+
+    Returns:
+    --------
+    
+    """
+    
+    # Create star and dark matter profiles
+    pStar = pynbody.analysis.profile.Profile(hfaceon.s,min=rmin,max=rmax,ndim=3)
+    pDark = pynbody.analysis.profile.Profile(hfaceon.d,min=rmin,max=rmax,ndim=3)
+    
+    # Create a profile instance to store all the necessary data 
+    instance_data = {
+        'pStar': {
+            'radial_bins_kpc': pStar['rbins'].in_units('kpc').tolist(),
+            'radial_bins': pStar['rbins'].tolist(),
+            'vr_disp': pStar['vr_disp'].in_units('km s^-1').tolist(),
+            'vt_disp': pStar['vt_disp'].in_units('km s^-1').tolist(),
+            'density': pStar['density'].tolist()
+        },
+        'pDark': {
+            'radial_bins_kpc': pDark['rbins'].in_units('kpc').tolist(),
+            'radial_bins': pDark['rbins'].tolist(),
+            'vr_disp': pDark['vr_disp'].in_units('km s^-1').tolist(),
+            'vt_disp': pDark['vt_disp'].in_units('km s^-1').tolist(),
+            'density': pDark['density'].tolist()
+        }
+    }
+        
+    # Read the existing data from the file
+    try:
+        with open(file_path, 'r') as file:
+            profiles = json.load(file)
+    except FileNotFoundError:
+        profiles = {}
+    
+    # Add the new instance data to the existing profiles
+    profiles[f'snap_{snap}'] = instance_data
+    
+    # Write the updated data back to the file
+    with open(file_path, 'w') as file:
+        json.dump(profiles, file, indent=4)
+        
 

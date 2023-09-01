@@ -9,7 +9,8 @@ from healpy.newvisufunc import projview, newprojplot
 
 sys.path.append("../scripts/src/")
 
-sys.path.append("/mnt/home/ecunningham/python")
+#sys.path.append("/mnt/home/ecunningham/python")
+sys.path.append('/home/jovyan/home/python_tools')
 #plt.style.use('~/matplotlib.mplstyle') # DID NOT COMPILE
 import gizmo_analysis as ga
 import halo_analysis as halo
@@ -44,9 +45,11 @@ def orbital_pole_dispersion(pos, vel):
 if __name__ ==  "__main__":
     sim=sys.argv[1]
     #sim_directory = "/mnt/ceph/users/firesims/fire2/metaldiff/{}_res7100/".format(sim)
-    sim_directory = "/Volumes/Haven/{}_res7100/".format(sim)
+    #sim_directory = "/Volumes/Haven/{}_res7100/".format(sim)
+    sim_directory = '/home/jovyan/data/fire2/{}_res7100'.format(sim)
     #snap_times = "/mnt/ceph/users/firesims/fire2/metaldiff/{}_res7100/snapshot_times.txt".format(sim)
-    snap_times = "/Volumes/Haven/{}_res7100/snapshot_times.txt".format(sim)
+    #snap_times = "/Volumes/Haven/{}_res7100/snapshot_times.txt".format(sim)
+    snap_times = '/home/jovyan/data/fire2/{}_res7100/snapshot_times.txt'.format(sim)
     times = np.loadtxt(snap_times, usecols=3)
     m12i_nosat = fa.FIRE(sim, remove_satellite=True, rm_stellar_sat=True)
     m12i = fa.FIRE(sim)

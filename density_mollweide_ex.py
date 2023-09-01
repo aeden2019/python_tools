@@ -41,7 +41,8 @@ from astropy import units as u
 import sys
 import pynbody
 
-sys.path.append("/mnt/home/ecunningham/python")
+#sys.path.append("/mnt/home/ecunningham/python")
+sys.path.append('/home/jovyan/home/python_tools')
 #plt.style.use('~/matplotlib.mplstyle')
 import gizmo_analysis as ga
 import halo_analysis as halo
@@ -54,8 +55,10 @@ from io_gizmo_pynbody  import FIRE
 import analysis as an
 import sys
 
+import graphing 
 
-plt.rcParams['font.size'] = 35
+#plt.rcParams['font.size'] = 35
+plt.rcParams['font.size'] = 10
 
 
 
@@ -74,10 +77,11 @@ if __name__ == "__main__":
     rotate = True
     k = snap_init
     # ADDED OVERDENSITY
-    overdensity = False
+    overdensity = True
 
     #snap_times = '/mnt/ceph/users/firesims/fire2/metaldiff/{}_res7100/snapshot_times.txt'.format(sim)
-    snap_times = "/Volumes/Haven/{}_res7100/snapshot_times.txt".format(sim)
+    #snap_times = "/Volumes/Haven/{}_res7100/snapshot_times.txt".format(sim)
+    snap_times = '/home/jovyan/data/fire2/{}_res7100/snapshot_times.txt'.format(sim)
     times = np.loadtxt(snap_times, usecols=3)
     #plot_type = 'cartesian_projection' # vr_mollweide, orbital_poles 
     #plot_type = 'vr_mollweide'#, orbital_poles 
@@ -98,6 +102,12 @@ if __name__ == "__main__":
         hfaceon = m12.rotated_halo(k, rotate=rotate, part_sample=0.01)
         pos = hfaceon.dark['pos']
         vel = hfaceon.dark['vel']*f
+        
+    # TESTING - PROFILES
+    if ptype == 'star' or ptype == 'dark':
+        graphing.graph_profiles(hfaceon, rmin, rmax, sim, k)
+        figname = "sim_{}_{}_snap_{:03d}_dispersion_profiles.png".format(sim, ptype, k)
+        plt.savefig(figname, bbox_inches='tight')
 
     dist = np.sqrt(np.sum(pos**2, axis=1))
     dist_cut1 = np.where((dist > rmin) & (dist< rmax)) 
@@ -133,7 +143,15 @@ if __name__ == "__main__":
         pos_galactic = kinematics1.pos_cartesian_to_galactic()
         pl.mollweide_projection(pos_galactic[0]*180/np.pi, pos_galactic[1]*180/np.pi, 
                                 0, 0, 
-                                title=fig_title, bmin=bmin, bmax=bmax, nside=40, smooth=5, figname=figname, overdensity=overdensity)
+                                title=fig_title, bmin=bmin, bmax=bmax, nside=40, smooth=5, figname=figname,
+                                overdensity=overdensity)
+# FROM vr_mollweide_movies
+#         pl.mollweide_projection(pos_galactic[0]*180/np.pi, pos_galactic[1]*180/np.pi, 
+#                                 lsat[:k-300+1]*180/np.pi, 
+#                                 bsat[:k-300+1]*180/np.pi, 
+#                                 title=fig_title, bmin=bmin, bmax=bmax, nside=40, smooth=5, 
+#                                 figname=figname, overdensity=overdensity)
+#         print(lsat[:k-300+1]) # Should be 85 elements, should not be 0 (do the same for bsat[:k-300+1])
     
     elif plot_type == "poles_mollweide":
         #figname = "../plots/exploration/outer_{}_OP_{}_faceon_no_sat_{:03d}.png".format(sim, ptype, k)

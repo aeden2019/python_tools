@@ -41,7 +41,8 @@ from astropy import units as u
 import sys
 import pynbody
 
-sys.path.append("/mnt/home/ecunningham/python")
+#sys.path.append("/mnt/home/ecunningham/python")
+sys.path.append('/home/jovyan/home/python_tools')
 #plt.style.use('~/matplotlib.mplstyle') # DID NOT COMPILE
 import gizmo_analysis as ga
 import halo_analysis as halo
@@ -150,7 +151,8 @@ def poles_subhalos(snap, rmin=20, rmax=400, satellites=False):
 # Get all the subhalos
 def get_halo_satellite(sim, mass_rank):
     #sim_directory = "/mnt/ceph/users/firesims/fire2/metaldiff/{}_res7100/".format(sim)
-    sim_directory = "/Volumes/Haven/{}_res7100/".format(sim)
+    #sim_directory = "/Volumes/Haven/{}_res7100/".format(sim)
+    sim_directory = '/home/jovyan/data/fire2/{}_res7100'.format(sim)
     m12_subhalos = halo.io.IO.read_catalogs('index', 300, sim_directory)
     halt = halo.io.IO.read_tree(simulation_directory=sim_directory)
     hsub = pr.pynbody_subhalos(m12_subhalos)
@@ -175,7 +177,8 @@ class FIRE:
   def __init__(self, sim, remove_satellite=False, remove_subs=False, only_sat=False, rm_stellar_sat=False):
 
     #self.sim_directory = "/mnt/ceph/users/firesims/fire2/metaldiff/{}_res7100/".format(sim)
-    self.sim_directory = "/Volumes/Haven/{}_res7100/".format(sim)
+    #self.sim_directory = "/Volumes/Haven/{}_res7100/".format(sim)
+    self.sim_directory = '/home/jovyan/data/fire2/{}_res7100'.format(sim)
     
     if sim == 'm12c':
         sat_path = '/mnt/home/ecunningham/ceph/latte/{}_res7100/massive_stream/dm_inds.npy'.format(sim)
@@ -183,7 +186,7 @@ class FIRE:
     
     elif sim == 'm12f':
         sat_path = '/mnt/home/ecunningham/ceph/latte/m12f_res7100/massive_stream/dm_particle_inds.npy'
-        stars_path = '/mnt/home/ecunningham/ceph/latte/{}_res7100/massive_stream/z0_stream_inds.npy'.format(sim)
+        stars_path = '/mnt/home/ecunningham/ceph/latte/{}_res7100/massive_stream/z0_stream_inds.npy'.foarmat(sim)
         self.stars_ids = np.load(stars_path)
         self.sat_ids = np.load(sat_path) 
 
@@ -195,7 +198,14 @@ class FIRE:
         # stars_path = '/mnt/home/ecunningham/ceph/latte/{}_res7100/massive_stream/new_z0_inds.npy'.format(sim)
         # self.stars_ids = np.load(stars_path)
         # self.sat_ids = np.load(sat_path) 
-        pass
+        
+        # UPDATED FOR BINDER DATA
+        sat_path = '/home/jovyan/home/tracked/{}/dm_inds.npy'.format(sim)
+        subs_path = '/home/jovyan/home/tracked/{}/{}_385_unbound_dark_indices.npy'.format(sim,sim)
+        stars_path = '/home/jovyan/home/tracked/{}/new_z0_inds.npy'.format(sim)
+        self.subs_ids = np.load(subs_path)
+        self.stars_ids = np.load(stars_path)
+        self.sat_ids = np.load(sat_path) 
 
     elif sim == 'm12r':
         sat_path = '/mnt/home/ecunningham/ceph/latte/{}_res7100/dm_inds_m1.npy'.format(sim)
@@ -257,7 +267,7 @@ class FIRE:
 
     # Read snapshot
     p = ga.io.Read.read_snapshots(['dark', 'star'], 'index', snap, self.sim_directory, 
-                              assign_hosts=True, particle_subsample_factor=0.1, sort_dark_by_id=True, assign_pointers=True)
+                              assign_hosts=True, particle_subsample_factor=1, sort_dark_by_id=True, assign_pointers=True)
    
     # Removing satellite substructure
     npart = len(p['dark'].prop('mass'))
@@ -266,7 +276,7 @@ class FIRE:
     mask_subs = np.ones(nparts, dtype=bool)
 
     if self.rm_sat == True :
-        #mask_sub[self.sat_ids]=0 # DID NOT COMPILE
+        mask_sub[self.sat_ids]=0
         print("* Removing DM particles from massive satellite")       
         
     if self.rm_subs == True :
@@ -275,7 +285,7 @@ class FIRE:
 
     if self.only_sat == True :
         mask_sub = np.zeros(npart, dtype=bool)
-        #mask_sub[self.sat_ids]=1 # REMOVED sats_id
+        mask_sub[self.sat_ids]=1 
         print("* Only plotting DM particles from the Satellite")     
     
     if self.rm_stellar_sat == True :
@@ -384,7 +394,7 @@ class FIRE:
     Sat_index = -2 for m12b. Second massive subhhalo at snap 300
     """
     p = ga.io.Read.read_snapshots(['dark', 'star'], 'index', snap, self.sim_directory, 
-                              assign_hosts=True, particle_subsample_factor=0.1, sort_dark_by_id=True)
+                              assign_hosts=True, particle_subsample_factor=1, sort_dark_by_id=True)
     #Building pynbody subhalos in halo format
     subhalos = halo.io.IO.read_catalogs('index', snap, self.sim_directory)
     # Tree

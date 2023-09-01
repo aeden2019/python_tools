@@ -132,11 +132,13 @@ if __name__ == "__main__":
     
    
     #sim_directory = "/mnt/ceph/users/firesims/fire2/metaldiff/{}_res7100/".format(sim)
-    sim_directory = "/Volumes/Haven/{}_res7100/".format(sim)
+    #sim_directory = "/Volumes/Haven/{}_res7100/".format(sim)
+    sim_directory = '/home/jovyan/data/fire2/{}_res7100'.format(sim)
     lOP, bOP = poles_subhalos(snap_init, rmin, rmax, satellites=sats)
 
     #snap_times = "/mnt/ceph/users/firesims/fire2/metaldiff/{}_res7100/snapshot_times.txt".format(sim)
-    snap_times = "/Volumes/Haven/{}_res7100/snapshot_times.txt".format(sim)
+    #snap_times = "/Volumes/Haven/{}_res7100/snapshot_times.txt".format(sim)
+    snap_times = '/home/jovyan/data/fire2/{}_res7100/snapshot_times.txt'.format(sim)
     times = np.loadtxt(snap_times, usecols=3)
     
     if sim=='m12b':
