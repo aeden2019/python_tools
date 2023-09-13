@@ -274,7 +274,7 @@ class FIRE:
     mask_sub = np.ones(npart, dtype=bool)
     nparts = len(p['star'].prop('mass'))
     mask_subs = np.ones(nparts, dtype=bool)
-
+    
     if self.rm_sat == True :
         mask_sub[self.sat_ids]=0
         print("* Removing DM particles from massive satellite")       
@@ -302,7 +302,9 @@ class FIRE:
     if rotate == True:
         pynbody.analysis.angmom.faceon(hfaceon, cen=(0,0,0))
 
-    return hfaceon
+    # CHANGE THIS TO PASS MASK TO NEXT FUNCTION FOR ANANKE
+    #return hfaceon
+    return hfaceon, mask_subs
 
 
   def get_catids_satsubhalos(self):

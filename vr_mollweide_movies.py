@@ -62,7 +62,7 @@ from scipy.spatial.transform import Rotation as R
 #plt.rcParams['font.size'] = 35
 plt.rcParams['font.size'] = 10
 
-import ananke as a
+import ananke_data as a
 
 
 
@@ -76,11 +76,13 @@ if __name__ == "__main__":
     bmin = float(sys.argv[5])
     bmax = float(sys.argv[6])
     sats = False
+    #rmin = 0
     rmin = 50
     rmax = 300
     rotate = True
-    remove_satellite = False
-    rm_stellar_sat = False
+    remove_satellite = True
+    rm_stellar_sat = True
+    run_ananke = True
     # ADDED OVERDENSITY
     overdensity = False
     over_arg = sys.argv[7]
@@ -108,11 +110,15 @@ if __name__ == "__main__":
 
         if ptype == 'star':
             # face on particle data halo
-            hfaceon = m12.rotated_halo(k)
+            #hfaceon = m12.rotated_halo(k)
+            # ADD MASK FOR ANANKE
+            hfaceon, mask_subs = m12.rotated_halo(k)
             pos = hfaceon.star['pos']
             vel = hfaceon.star['vel']*f
         elif ptype == 'dark':
-            hfaceon = m12.rotated_halo(k, rotate=rotate)
+            #hfaceon = m12.rotated_halo(k, rotate=rotate)
+            # ADD MASK FOR ANANKE
+            hfaceon, mask_subs = m12.rotated_halo(k, rotate=rotate)
             pos = hfaceon.dark['pos']
             vel = hfaceon.dark['vel']*f
         elif ptype == 'subhalos':
@@ -121,6 +127,11 @@ if __name__ == "__main__":
             pos = subhalos_faceon.star['pos']    
             vel = subhalos_faceon.star['vel']*f
             
+        # TESTING
+        print("TEST POS")
+        print(pos)
+        print(type(pos))
+        
         # PROFILES
 #         if ptype == 'star' or ptype == 'dark':
 #             graphing.graph_profiles(hfaceon, rmin, rmax, sim, k)
@@ -128,14 +139,9 @@ if __name__ == "__main__":
 #             plt.savefig(figname, bbox_inches='tight')
 #             plt.close()
         
-        # TESTING - SAVE PROFILE DATA TO JSON FILE
-#         graphing.store_profile_data(hfaceon, rmin, rmax, sim, k, 'profiles.json')
-            
-        dist = np.sqrt(np.sum(pos**2, axis=1))
+        # SAVE PROFILE DATA TO JSON FILE
+#         graphing.store_profile_data(hfaceon, rmin, rmax, sim, k, 'full_profiles.json')
 
-        dist_cut1 = np.where((dist > rmin) & (dist< rmax)) 
-        #dist_cut2 = np.where((dist> 300) & (dist< 600)) 
-        
         # TESTING - Rotation in cartesian 
         r = R.from_euler('x', 90, degrees=True)
         pos = r.apply(pos)
@@ -143,10 +149,25 @@ if __name__ == "__main__":
         satellite_faceon.dark['pos'] = r.apply(satellite_faceon.dark['pos'])
         satellite_faceon.dark['vel'] = r.apply(satellite_faceon.dark['vel'])
         
-        # TESTING - Ananke
-        #pos, vel = a.get_ananke(sim, k, pos, vel)
+        # TESTING
+        print("TEST POS 2")
+        print(pos)
+        print(type(pos))
         
+        # TESTING - Ananke
+        if run_ananke:
+            sim_dir = '/home/jovyan/data/fire2/{}_res7100/'.format(sim)
+            pos, vel = a.get_ananke(sim_dir, k, pos, vel, mask_subs)
+            
+        print("TEST POS 3")
+        print(pos)
+        print(type(pos))
+            
+        dist = np.sqrt(np.sum(pos**2, axis=1))
 
+        dist_cut1 = np.where((dist > rmin) & (dist< rmax)) 
+        #dist_cut2 = np.where((dist> 300) & (dist< 600)) 
+    
         kinematics1 = nba.kinematics.Kinematics(pos[dist_cut1],  vel[dist_cut1])
         #kinematics2 = nba.kinematics.Kinematics(pos[dist_cut2],  vel[dist_cut2])
         
@@ -216,35 +237,35 @@ if __name__ == "__main__":
             pos_galactic = kinematics1.pos_cartesian_to_galactic()
             vel_galactic = kinematics1.vel_cartesian_to_galactic()
             
-#             # POSITION
-#             print("POS")
-#             figname = "{}_rho_{}_faceon_{:03d}_{}_{}.png".format(sim, ptype, k, sat_ind, over_ind)
-#             pl.mollweide_projection(pos_galactic[0]*180/np.pi, pos_galactic[1]*180/np.pi, 
-#                                         lsat[k-300]*180/np.pi, 
-#                                         bsat[k-300]*180/np.pi, 
-#                                         title=fig_title, bmin=bmin, bmax=bmax, nside=40, smooth=5, 
-#                                         figname=figname, overdensity=overdensity)  
-            
-            # RADIAL VELOCITY
-            print("RAD")
-            figname = "rad_vel_{}_rho_{}_faceon_{:03d}_{}_{}.png".format(sim, ptype, k, sat_ind, over_ind)
-            q = np.absolute(vel_galactic[0])
+            # POSITION
+            print("POS")
+            figname = "{}_rho_{}_faceon_{:03d}_{}_{}.png".format(sim, ptype, k, sat_ind, over_ind)
             pl.mollweide_projection(pos_galactic[0]*180/np.pi, pos_galactic[1]*180/np.pi, 
-                                    lsat[k-300]*180/np.pi, 
-                                    bsat[k-300]*180/np.pi, 
-                                    title=fig_title, bmin=bmin, bmax=bmax, nside=40, smooth=5, 
-                                    figname=figname, overdensity=overdensity, q=q, velocity=True)
+                                        lsat[k-300]*180/np.pi, 
+                                        bsat[k-300]*180/np.pi, 
+                                        title=fig_title, bmin=bmin, bmax=bmax, nside=40, smooth=5, 
+                                        figname=figname, overdensity=overdensity)  
+            
+#             # RADIAL VELOCITY
+#             print("RAD")
+#             figname = "rad_vel_{}_rho_{}_faceon_{:03d}_{}_{}.png".format(sim, ptype, k, sat_ind, over_ind)
+#             q = np.absolute(vel_galactic[0])
+#             pl.mollweide_projection(pos_galactic[0]*180/np.pi, pos_galactic[1]*180/np.pi, 
+#                                     lsat[k-300]*180/np.pi, 
+#                                     bsat[k-300]*180/np.pi, 
+#                                     title=fig_title, bmin=bmin, bmax=bmax, nside=40, smooth=5, 
+#                                     figname=figname, overdensity=overdensity, q=q, velocity=True)
 
             
-            # TANGENTIAL VELOCITY
-            print("TAN")
-            figname = "tan_vel_{}_rho_{}_faceon_{:03d}_{}_{}.png".format(sim, ptype, k, sat_ind, over_ind)  
-            q = np.absolute(np.sqrt(vel_galactic[1]**2 + vel_galactic[2]**2))
-            pl.mollweide_projection(pos_galactic[0]*180/np.pi, pos_galactic[1]*180/np.pi, 
-                                    lsat[k-300]*180/np.pi, 
-                                    bsat[k-300]*180/np.pi, 
-                                    title=fig_title, bmin=bmin, bmax=bmax, nside=40, smooth=5, 
-                                    figname=figname, overdensity=overdensity, q=q, velocity=True)
+#             # TANGENTIAL VELOCITY
+#             print("TAN")
+#             figname = "tan_vel_{}_rho_{}_faceon_{:03d}_{}_{}.png".format(sim, ptype, k, sat_ind, over_ind)  
+#             q = np.absolute(np.sqrt(vel_galactic[1]**2 + vel_galactic[2]**2))
+#             pl.mollweide_projection(pos_galactic[0]*180/np.pi, pos_galactic[1]*180/np.pi, 
+#                                     lsat[k-300]*180/np.pi, 
+#                                     bsat[k-300]*180/np.pi, 
+#                                     title=fig_title, bmin=bmin, bmax=bmax, nside=40, smooth=5, 
+#                                     figname=figname, overdensity=overdensity, q=q, velocity=True)
             
         
         elif plot_type == "poles_mollweide":
